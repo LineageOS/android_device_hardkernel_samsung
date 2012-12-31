@@ -182,6 +182,8 @@ struct hwc_context_t {
     int                       num_of_fb_layer_prev;
     int                       num_2d_blit_layer;
     uint32_t                  layer_prev_buf[NUM_OF_WIN];
+    hwc_procs_t               *procs;
+    pthread_t                 vsync_thread;
 };
 
 typedef enum _LOG_LEVEL {

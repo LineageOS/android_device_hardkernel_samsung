@@ -40,6 +40,9 @@
 
 #include "SecHdmi.h"
 
+#include <sys/resource.h>
+#include <hardware_legacy/uevent.h>
+
 //#define CHECK_EGL_FPS
 #ifdef CHECK_EGL_FPS
 extern void check_fps();
@@ -64,8 +67,8 @@ static struct hw_module_methods_t hwc_module_methods = {
 hwc_module_t HAL_MODULE_INFO_SYM = {
     common: {
         tag: HARDWARE_MODULE_TAG,
-        version_major: 1,
-        version_minor: 0,
+        module_api_version: HWC_MODULE_API_VERSION_0_1,
+        hal_api_version: HARDWARE_HAL_API_VERSION,
         id: HWC_HARDWARE_MODULE_ID,
         name: "Samsung S5PC21X hwcomposer module",
         author: "SAMSUNG",
@@ -841,6 +844,99 @@ static int hwc_set(hwc_composer_device_t *dev,
     return 0;
 }
 
+static void hwc_registerProcs(struct hwc_composer_device* dev,
+        hwc_procs_t const* procs)
+{
+    struct hwc_context_t* ctx = (struct hwc_context_t*)dev;
+    ctx->procs = const_cast<hwc_procs_t *>(procs);
+}
+
+static int hwc_query(struct hwc_composer_device* dev,
+        int what, int* value)
+{
+    struct hwc_context_t* ctx = (struct hwc_context_t*)dev;
+ SEC_HWC_Log(HWC_LOG_ERROR, "HWC: %s", __func__);
+    switch (what) {
+    case HWC_BACKGROUND_LAYER_SUPPORTED:
+        // we don't support the background layer yet
+        value[0] = 0;
+        break;
+    case HWC_VSYNC_PERIOD:
+        // vsync period in nanosecond
+        value[0] = 1000000000.0 / 60;
+        //value[0] = 1000000000.0 / fps;
+        break;
+    default:
+        // unsupported query
+        return -EINVAL;
+    }
+    return 0;
+}
+
+static int hwc_eventControl(struct hwc_composer_device* dev,
+        int event, int enabled)
+{
+    struct hwc_context_t* ctx = (struct hwc_context_t*)dev;
+
+    switch (event) {
+    case HWC_EVENT_VSYNC:
+        int val = !!enabled;
+        int i;
+        //for (i = 0; i < NUM_OF_WIN; i++) {
+            int err = ioctl(ctx->win[0].fd, S3CFB_SET_VSYNC_INT, &val);
+            if (err < 0)
+                return -errno;
+        //}
+
+        return 0;
+    }
+
+    return -EINVAL;
+}
+
+void handle_vsync_uevent(hwc_context_t *ctx, const char *buff, int len)
+{
+    uint64_t timestamp = 0;
+    const char *s = buff;
+
+    if(!ctx->procs || !ctx->procs->vsync)
+       return;
+
+    s += strlen(s) + 1;
+    while(*s) {
+        if (!strncmp(s, "VSYNC=", strlen("VSYNC=")))
+            timestamp = strtoull(s + strlen("VSYNC="), NULL, 0);
+
+        s += strlen(s) + 1;
+        if (s - buff >= len)
+            break;
+    }
+
+    ctx->procs->vsync(ctx->procs, 0, timestamp);
+}
+
+static void *hwc_vsync_thread(void *data)
+{
+    hwc_context_t *ctx = (hwc_context_t *)(data);
+    char uevent_desc[4096];
+    memset(uevent_desc, 0, sizeof(uevent_desc));
+
+    setpriority(PRIO_PROCESS, 0, HAL_PRIORITY_URGENT_DISPLAY);
+    uevent_init();
+    while(true) {
+        int len = uevent_next_event(uevent_desc, sizeof(uevent_desc) - 2);
+        bool vsync = !strcmp(uevent_desc, "change@/devices/platform/samsung-pd.2/s3cfb.0");
+        if(vsync)
+            handle_vsync_uevent(ctx, uevent_desc, len);
+    }
+
+    return NULL;
+}
+
+static const struct hwc_methods hwc_methods = {
+    eventControl: hwc_eventControl
+};
+
 static int hwc_device_close(struct hw_device_t *dev)
 {
     struct hwc_context_t* ctx = (struct hwc_context_t*)dev;
@@ -879,7 +975,10 @@ static int hwc_device_open(const struct hw_module_t* module, const char* name,
 
     /* initialize the procs */
     dev->device.common.tag = HARDWARE_DEVICE_TAG;
-    dev->device.common.version = HWC_DEVICE_API_VERSION_0_1;
+    dev->device.common.version = HWC_DEVICE_API_VERSION_0_3;
+    dev->device.registerProcs = hwc_registerProcs;
+    dev->device.query = hwc_query;
+    dev->device.methods = &hwc_methods;
     dev->device.common.module = const_cast<hw_module_t*>(module);
     dev->device.common.close = hwc_device_close;
 
@@ -944,6 +1043,13 @@ static int hwc_device_open(const struct hw_module_t* module, const char* name,
     //create PP
     if (createFimc(&dev->fimc) < 0) {
         SEC_HWC_Log(HWC_LOG_ERROR, "%s::creatFimc() fail", __func__);
+        status = -EINVAL;
+        goto err;
+    }
+
+    status = pthread_create(&dev->vsync_thread, NULL, hwc_vsync_thread, dev);
+    if (status) {
+        ALOGE("%s::pthread_create() failed : %s", __func__, strerror(status));
         status = -EINVAL;
         goto err;
     }
