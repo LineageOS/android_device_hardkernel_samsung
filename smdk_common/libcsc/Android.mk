@@ -18,8 +18,8 @@ OMX_NAME := sec
 endif
 
 LOCAL_C_INCLUDES := \
-	$(TOP)/device/samsung/multimedia/openmax/$(OMX_NAME)_omx/include/khronos \
-	$(TOP)/device/samsung/multimedia/openmax/$(OMX_NAME)_omx/include/$(OMX_NAME)
+	$(TOP)/device/hardkernel/samsung/multimedia/openmax/$(OMX_NAME)_omx/include/khronos \
+	$(TOP)/device/hardkernel/samsung/multimedia/openmax/$(OMX_NAME)_omx/include/$(OMX_NAME)
 
 LOCAL_CFLAGS :=
 
@@ -39,15 +39,15 @@ endif
 ifeq ($(TARGET_BOARD_PLATFORM), exynos4)
 LOCAL_SRC_FILES += hwconverter_wrapper.cpp
 LOCAL_C_INCLUDES += \
-	$(TOP)/device/samsung/exynos4/include \
-	$(TOP)/device/samsung/exynos4/libhwconverter
+	$(TOP)/device/hardkernel/samsung/exynos4/include \
+	$(TOP)/device/hardkernel/samsung/exynos4/libhwconverter
 LOCAL_CFLAGS += -DUSE_FIMC
 LOCAL_SHARED_LIBRARIES += libfimc libhwconverter
 endif
 
 ifeq ($(TARGET_BOARD_PLATFORM), exynos5)
 LOCAL_C_INCLUDES += \
-	$(TOP)/device/samsung/exynos5/include
+	$(TOP)/device/hardkernel/samsung/exynos5/include
 LOCAL_CFLAGS += -DUSE_GSCALER
 LOCAL_SHARED_LIBRARIES += libexynosgscaler
 endif

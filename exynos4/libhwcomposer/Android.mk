@@ -44,9 +44,9 @@ endif
 
 ifeq ($(BOARD_USES_HDMI),true)
 LOCAL_C_INCLUDES += \
-	device/samsung/$(TARGET_BOARD_PLATFORM)/libhwcomposer \
-	device/samsung/$(TARGET_BOARD_PLATFORM)/include \
-	device/samsung/$(TARGET_BOARD_PLATFORM)/libhdmi/libhdmiservice
+	device/hardkernel/samsung/$(TARGET_BOARD_PLATFORM)/libhwcomposer \
+	device/hardkernel/samsung/$(TARGET_BOARD_PLATFORM)/include \
+	device/hardkernel/samsung/$(TARGET_BOARD_PLATFORM)/libhdmi/libhdmiservice
 
 LOCAL_SHARED_LIBRARIES 	+= libhdmiclient libTVOut
 

@@ -37,9 +37,10 @@ LOCAL_SHARED_LIBRARIES := \
 	libutils \
 	libcutils
 
-LOCAL_C_INCLUDES += device/samsung/exynos4/include
-LOCAL_C_INCLUDES += device/samsung/exynos4/libhdmi
-LOCAL_C_INCLUDES += device/samsung/exynos4/libfimc
+LOCAL_C_INCLUDES += device/hardkernel/samsung/exynos4/include
+LOCAL_C_INCLUDES += device/hardkernel/samsung/exynos4/libhdmi
+LOCAL_C_INCLUDES += device/hardkernel/samsung/exynos4/libfimc
+LOCAL_C_INCLUDES += frameworks/native/include
 LOCAL_SHARED_LIBRARIES += libhdmi libfimc
 
 ifeq ($(BOARD_USES_HDMI_SUBTITLES),true)

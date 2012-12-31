@@ -14,10 +14,10 @@ LOCAL_SRC_FILES := \
 	csc_ARGB8888_to_YUV420SP_NEON.s
 
 LOCAL_C_INCLUDES := \
-	$(TOP)/device/samsung/multimedia/openmax/include/khronos \
-	$(TOP)/device/samsung/multimedia/openmax/include/sec \
-	$(TOP)/device/samsung/exynos4/include \
-	$(TOP)/device/samsung/exynos4/libhwconverter
+	$(TOP)/device/hardkernel/samsung/multimedia/openmax/include/khronos \
+	$(TOP)/device/hardkernel/samsung/multimedia/openmax/include/sec \
+	$(TOP)/device/hardkernel/samsung/exynos4/include \
+	$(TOP)/device/hardkernel/samsung/exynos4/libhwconverter
 
 ifeq ($(BOARD_USE_SAMSUNG_COLORFORMAT), true)
 LOCAL_CFLAGS += -DUSE_SAMSUNG_COLORFORMAT

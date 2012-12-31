@@ -60,6 +60,6 @@ LOCAL_C_INCLUDES := $(SEC_OMX_INC)/khronos \
 	$(SEC_OMX_COMPONENT)/common \
 	$(SEC_OMX_COMPONENT)/video/dec \
 	$(TARGET_OUT_HEADERS)/$(SEC_COPY_HEADERS_TO) \
-	$(TOP)/device/samsung/$(TARGET_BOARD_PLATFORM)/include
+	$(TOP)/device/hardkernel/samsung/$(TARGET_BOARD_PLATFORM)/include
 
 include $(BUILD_SHARED_LIBRARY)

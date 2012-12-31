@@ -56,7 +56,7 @@ endif
 
 ifeq ($(BOARD_USES_FIMGAPI),true)
 	LOCAL_CFLAGS += -DBOARD_USES_FIMGAPI
-	LOCAL_C_INCLUDES += device/samsung/$(TARGET_BOARD_PLATFORM)/libfimg4x
+	LOCAL_C_INCLUDES += device/hardkernel/samsung/$(TARGET_BOARD_PLATFORM)/libfimg4x
 	LOCAL_C_INCLUDES += external/skia/include/core
 	LOCAL_SHARED_LIBRARIES += libfimg
 endif

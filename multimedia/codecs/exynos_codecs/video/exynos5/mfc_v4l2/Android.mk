@@ -11,7 +11,7 @@ LOCAL_SRC_FILES := \
 
 LOCAL_C_INCLUDES := \
 	$(LOCAL_PATH)/include \
-	device/samsung/$(TARGET_BOARD_PLATFORM)/include
+	device/hardkernel/samsung/$(TARGET_BOARD_PLATFORM)/include
 
 LOCAL_MODULE := libExynosVideoApi
 LOCAL_MODULE_TAGS := optional

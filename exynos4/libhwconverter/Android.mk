@@ -24,9 +24,9 @@ LOCAL_SRC_FILES := HardwareConverter.cpp
 
 LOCAL_C_INCLUDES := \
 	$(LOCAL_PATH)/../include \
-	$(TOP)/device/samsung/exynos4/include \
-	$(TOP)/device/samsung/multimedia/openmax/sec_omx/include/khronos \
-	$(TOP)/device/samsung/multimedia/openmax/sec_omx/include/sec
+	$(TOP)/device/hardkernel/samsung/exynos4/include \
+	$(TOP)/device/hardkernel/samsung/multimedia/openmax/sec_omx/include/khronos \
+	$(TOP)/device/hardkernel/samsung/multimedia/openmax/sec_omx/include/sec
 
 LOCAL_MODULE_TAGS := eng
 LOCAL_MODULE := libhwconverter

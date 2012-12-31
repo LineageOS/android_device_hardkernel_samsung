@@ -21,6 +21,7 @@ LOCAL_C_INCLUDES += \
 	external/tinyalsa/include \
 	system/media/audio_effects/include \
 	system/media/audio_utils/include \
+	device/hardkernel/$(TARGET_DEVICE)/conf \
 	device/samsung/$(TARGET_DEVICE)/conf \
 	device/samsung/smdkv310/conf \
 	device/samsung/smdk4x12/conf

@@ -637,6 +637,7 @@ int fimc_v4l2_S_ctrl(int fd)
 {
     struct v4l2_control vc;
 
+#define V4L2_CID_CACHEABLE	(V4L2_CID_BASE+40)
     vc.id = V4L2_CID_CACHEABLE;
     vc.value = 1;
 
