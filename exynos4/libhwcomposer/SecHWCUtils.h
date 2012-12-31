@@ -183,6 +183,7 @@ struct hwc_context_t {
     int                       num_2d_blit_layer;
     uint32_t                  layer_prev_buf[NUM_OF_WIN];
     hwc_procs_t               *procs;
+    int                       vsync_fd;
     pthread_t                 vsync_thread;
 };
 

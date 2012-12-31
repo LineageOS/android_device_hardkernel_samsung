@@ -894,40 +894,24 @@ static int hwc_eventControl(struct hwc_composer_device* dev,
     return -EINVAL;
 }
 
-void handle_vsync_uevent(hwc_context_t *ctx, const char *buff, int len)
-{
-    uint64_t timestamp = 0;
-    const char *s = buff;
-
-    if(!ctx->procs || !ctx->procs->vsync)
-       return;
-
-    s += strlen(s) + 1;
-    while(*s) {
-        if (!strncmp(s, "VSYNC=", strlen("VSYNC=")))
-            timestamp = strtoull(s + strlen("VSYNC="), NULL, 0);
-
-        s += strlen(s) + 1;
-        if (s - buff >= len)
-            break;
-    }
-
-    ctx->procs->vsync(ctx->procs, 0, timestamp);
-}
-
 static void *hwc_vsync_thread(void *data)
 {
+    static char buf[4096];
     hwc_context_t *ctx = (hwc_context_t *)(data);
-    char uevent_desc[4096];
-    memset(uevent_desc, 0, sizeof(uevent_desc));
+    fd_set exceptfds;
+    int64_t timestamp = 0;
 
     setpriority(PRIO_PROCESS, 0, HAL_PRIORITY_URGENT_DISPLAY);
-    uevent_init();
+
+    FD_ZERO(&exceptfds);
+    FD_SET(ctx->vsync_fd, &exceptfds);
+
     while(true) {
-        int len = uevent_next_event(uevent_desc, sizeof(uevent_desc) - 2);
-        bool vsync = !strcmp(uevent_desc, "change@/devices/platform/samsung-pd.2/s3cfb.0");
-        if(vsync)
-            handle_vsync_uevent(ctx, uevent_desc, len);
+        int err = read(ctx->vsync_fd, buf, sizeof(buf));
+        timestamp = strtoull(buf, NULL, 0);
+        ctx->procs->vsync(ctx->procs, 0, timestamp);
+        select(ctx->vsync_fd + 1, NULL, NULL, &exceptfds, NULL);
+        lseek(ctx->vsync_fd, 0, SEEK_SET);
     }
 
     return NULL;
@@ -942,6 +926,11 @@ static int hwc_device_close(struct hw_device_t *dev)
     struct hwc_context_t* ctx = (struct hwc_context_t*)dev;
     int ret = 0;
     int i;
+
+    pthread_kill(ctx->vsync_thread, SIGTERM);
+    pthread_join(ctx->vsync_thread, NULL);
+    close(ctx->vsync_fd);
+
     if (ctx) {
         if (destroyFimc(&ctx->fimc) < 0) {
             SEC_HWC_Log(HWC_LOG_ERROR, "%s::destroyFimc fail", __func__);
@@ -1044,6 +1033,12 @@ static int hwc_device_open(const struct hw_module_t* module, const char* name,
     if (createFimc(&dev->fimc) < 0) {
         SEC_HWC_Log(HWC_LOG_ERROR, "%s::creatFimc() fail", __func__);
         status = -EINVAL;
+        goto err;
+    }
+
+    dev->vsync_fd = open("/sys/devices/platform/samsung-pd.2/s3cfb.0/vsync", O_RDONLY);
+    if (dev->vsync_fd < 0) {
+        ALOGE("failed to open vsync attribute");
         goto err;
     }
 
