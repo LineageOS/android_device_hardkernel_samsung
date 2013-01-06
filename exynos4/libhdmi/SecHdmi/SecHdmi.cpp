@@ -1207,8 +1207,10 @@ bool SecHdmi::setHdmiResolution(unsigned int hdmiResolutionValue, unsigned int s
     }
 #else
     v4l2_std_id std_id;
+    bool allowFull = check_default_resolution() == 1;
+
     if (hdmi_resolution_2_std_id(newHdmiResolutionValue, newHdmiS3DMode, &w, &h, &std_id) < 0 ||
-        hdmi_check_resolution(std_id) < 0) {
+        hdmi_check_resolution(std_id) < 0 || allowFull) {
         bool flagFoundIndex = false;
         int resolutionValueIndex = 0;
 
@@ -1244,7 +1246,7 @@ bool SecHdmi::setHdmiResolution(unsigned int hdmiResolutionValue, unsigned int s
 
         if (flagFoundIndex == false) {
             newHdmiS3DMode = HDMI_2D;
-            resolutionValueIndex = m_resolutionValueIndex(DEFAULT_HDMI_RESOLUTION_VALUE, newHdmiS3DMode);
+            resolutionValueIndex = allowFull ? 1 : m_resolutionValueIndex(DEFAULT_HDMI_RESOLUTION_VALUE, newHdmiS3DMode);
             if (resolutionValueIndex < 0) {
                 ALOGE("%s::Cannot find matched resolution(%d) index\n", __func__, DEFAULT_HDMI_RESOLUTION_VALUE);
                 return false;
