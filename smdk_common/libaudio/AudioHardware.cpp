@@ -986,6 +986,19 @@ status_t AudioHardware::setInputSource_l(audio_source source)
      ALOGV("setInputSource_l(%d)", source);
      if (source != mInputSource) {
          if ((source == AUDIO_SOURCE_DEFAULT) || (mMode != AudioSystem::MODE_IN_CALL)) {
+             struct mixer*   mMixerAlternate  = mixer_open(1);
+             /* Try USB */
+             if (mMixerAlternate != NULL) {
+                 ALOGV("I have a second mixer, let's see if it has an input");
+                     struct mixer_ctl *ctl= mixer_get_ctl_by_name(mMixerAlternate, "Mic Capture Switch");
+                     if (ctl) {
+                        mixer_ctl_set_value(ctl, 0, 1);
+                        ctl= mixer_get_ctl_by_name(mMixerAlternate, "Mic Capture Volume");
+                        mixer_ctl_set_value(ctl, 1, 9999);
+                        ALOGV("mixer_ctl_select, Input Source, (USB)");
+                     }
+                     mixer_close(mMixerAlternate);
+             }
              if (mMixer) {
                  TRACE_DRIVER_IN(DRV_MIXER_GET)
                  struct mixer_ctl *ctl= mixer_get_ctl_by_name(mMixer, "Input Source");
@@ -1939,7 +1952,6 @@ void AudioHardware::AudioStreamInALSA::close_l()
 status_t AudioHardware::AudioStreamInALSA::open_l()
 {
     unsigned flags = PCM_IN;
-
     struct pcm_config config = {
         channels : mChannelCount,
         rate : AUDIO_HW_IN_SAMPLERATE,
@@ -1950,10 +1962,19 @@ status_t AudioHardware::AudioStreamInALSA::open_l()
         stop_threshold : 0,
         silence_threshold : 0,
     };
+    /* Test for USB and adjust */
+    struct mixer*   mMixerAlternate = mixer_open(1);
+    bool haveAlternateCard = (mMixerAlternate != NULL);
+
+    if (haveAlternateCard) {
+        config.rate = 48000;
+        mixer_close(mMixerAlternate);
+    }
 
     ALOGV("open pcm_in driver");
     TRACE_DRIVER_IN(DRV_PCM_OPEN)
-    mPcm = pcm_open(0, 0, flags, &config);
+    ALOGV("Have alternate card: %d using %dHz rate",haveAlternateCard, config.rate);
+    mPcm = pcm_open(haveAlternateCard ? 1 : 0, 0, flags, &config);
     TRACE_DRIVER_OUT
     if (!pcm_is_ready(mPcm)) {
         ALOGE("cannot open pcm_in driver: %s\n", pcm_get_error(mPcm));
