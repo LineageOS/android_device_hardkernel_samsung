@@ -14,6 +14,8 @@
 # limitations under the License.
 #
 
+ifeq ($(TARGET_BOARD_PLATFORM),exynos4)
 common_smdk_dirs := libaudio libaudiohw liblight libstagefrighthw keychars libexynosutils libcsc
 
 include $(call all-named-subdir-makefiles,$(common_smdk_dirs))
+endif
